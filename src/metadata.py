@@ -21,7 +21,7 @@ def write_metadata(path: Path, processed_cases: int) -> None:
         "repo_starter": "K4-Day9-Multi-Agent-A2A",
         "model_provider": MODEL_PROVIDER,
         "model_name": MODEL_NAME,
-        "parameter_size": "not publicly disclosed by OpenAI",
+        "parameter_size": "4B",
         "framework": (
             "custom Python multi-agent coordinator "
             "with Pydantic handoffs"
@@ -30,7 +30,7 @@ def write_metadata(path: Path, processed_cases: int) -> None:
         "pandas_version": pd.__version__,
         "policy_version": "EC_POLICY_V2",
         "execution_mode": (
-            "deterministic domain agents with OpenAI LLM review per case"
+            "deterministic domain agents with OpenRouter LLM review per case"
         ),
         "processed_cases": processed_cases,
     }

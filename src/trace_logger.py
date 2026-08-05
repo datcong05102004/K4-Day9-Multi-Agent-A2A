@@ -48,7 +48,7 @@ class TraceLogger:
             "model_provider": MODEL_PROVIDER,
             "model_name": MODEL_NAME,
             "execution_mode": (
-                "openai_llm_review"
+                "openrouter_llm_review"
                 if agent == "llm_review_agent"
                 else "deterministic_data_agent"
             ),

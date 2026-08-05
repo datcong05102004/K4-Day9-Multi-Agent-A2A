@@ -66,7 +66,7 @@ logging/trace.jsonl.
 | PaymentAgent | OrderProductAnalysis | PaymentAnalysis | payments qua DataStore |
 | DeliveryAgent | OrderProductAnalysis | DeliveryAnalysis | Không đọc CSV trực tiếp |
 | PolicyAgent | Bốn analysis handoff | PolicyDecision | Không đọc CSV trực tiếp |
-| LLMReviewAgent | CaseInput và CaseOutput dự thảo | LLMReview | Gọi OpenAI Responses API bằng key trong `.env` |
+| LLMReviewAgent | CaseInput và CaseOutput dự thảo | LLMReview | Gọi OpenRouter Chat API bằng key trong `.env` |
 | VerifierAgent | CaseOutput dự thảo | CaseOutput đã xác minh | Đọc lại orders, items, payments qua DataStore |
 | TraceLogger | Handoff summary | JSONL event | Chỉ ghi logging/trace.jsonl |
 
@@ -192,24 +192,21 @@ metadata.json ghi model, framework, runtime, policy version và số case.
 
 Model được khai báo trong source tại src/config.py:
 
-    MODEL_PROVIDER = "openai"
-    MODEL_NAME = "gpt-4o-mini"
+    MODEL_PROVIDER = "openrouter"
+    MODEL_NAME = "google/gemma-3-4b-it"
 
-OPENAI_API_KEY chỉ nằm trong .env. File .env bị .gitignore và không được đưa
+OPENROUTER_API_KEY chỉ nằm trong .env. File .env bị .gitignore và không được đưa
 vào trace, output, metadata hoặc submission ZIP.
 
 Pipeline dùng data agent xác định để tạo ID, timestamp, số tiền và policy result.
-LLMReviewAgent gọi OpenAI một lần cho mỗi case để audit tính nhất quán của output
+LLMReviewAgent gọi OpenRouter một lần cho mỗi case để audit tính nhất quán của output
 dự thảo; phản hồi LLM không tự thay đổi dữ liệu đã được đối chiếu từ CSV.
-OpenAI không công bố parameter count của gpt-4o-mini, vì vậy metadata ghi
-"not publicly disclosed by OpenAI". Nếu ban tổ chức yêu cầu bằng chứng công
-khai rằng model không quá 10B, cần đổi sang model có parameter count công bố
-trước khi nộp.
+Gemma 3 4B có 4 tỷ tham số, đáp ứng giới hạn không quá 10B của bài thi.
 
 ## 9. Chạy và kiểm tra
 
     .\.venv\Scripts\python.exe -m src.run
     .\.venv\Scripts\python.exe -m src.validate_outputs
 
-Kết quả hợp lệ gồm 50 output JSON, 350 trace event, 50 OpenAI model call và
+Kết quả hợp lệ gồm 50 output JSON, 350 trace event, 50 OpenRouter model call và
 metadata khớp cấu hình trong source.

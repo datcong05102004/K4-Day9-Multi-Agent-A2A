@@ -27,6 +27,7 @@ orchestration, kiểm tra và tài liệu.
 | Payment analysis | src/agents/payment_agent.py | OrderProductAnalysis | PaymentAnalysis | Hoàn thành |
 | Delivery analysis | src/agents/delivery_agent.py | OrderProductAnalysis | DeliveryAnalysis | Hoàn thành |
 | Policy decision | src/agents/policy_agent.py | Các analysis handoff | PolicyDecision | Hoàn thành |
+| LLM review | src/agents/llm_review_agent.py | CaseInput và CaseOutput | LLMReview | Hoàn thành |
 | Orchestration | src/coordinator.py | CaseInput | CaseOutput dự thảo | Hoàn thành |
 | Verification | src/verifier.py | CaseOutput và CSV | CaseOutput đã xác minh | Hoàn thành |
 | Batch và audit | src/run.py, src/trace_logger.py, src/metadata.py | 50 input | Output, trace, metadata | Hoàn thành |
@@ -48,9 +49,9 @@ tích hợp module, kiểm tra contract và viết tài liệu kiến trúc.
 | Tổng hợp output | CoordinatorAgent.process_case | CaseOutput đúng schema | Chạy EC_002 trong bộ nhớ |
 | Xác minh output | VerifierAgent.verify | Từ chối ID, evidence hoặc refund sai | Thử thay refund thành 999 BRL |
 
-Batch cuối đã sinh đủ 50 output từ EC_001.json đến EC_050.json. Trace có 300
-event, tương ứng 6 handoff cho mỗi case. metadata.json ghi processed_cases bằng
-50 và model_name là gpt-4o-mini.
+Batch cuối đã sinh đủ 50 output từ EC_001.json đến EC_050.json. Trace có 350
+event, tương ứng 7 handoff cho mỗi case. metadata.json ghi processed_cases bằng
+50 và model_name là google/gemma-3-4b-it.
 
 ## 4. Giải thích phần kỹ thuật
 
@@ -109,8 +110,8 @@ Các lệnh cần chạy cho batch cuối:
     .\.venv\Scripts\python.exe -m src.run
     .\.venv\Scripts\python.exe -m src.validate_outputs
 
-- **Kết quả mong đợi:** 50 output JSON, 300 trace event và metadata khớp source.
-- **Kết quả thực tế:** 50 output JSON, 300 trace event và metadata ghi 50 case.
+- **Kết quả mong đợi:** 50 output JSON, 350 trace event và metadata khớp source.
+- **Kết quả thực tế:** 50 output JSON, 350 trace event và metadata ghi 50 case.
   Batch validator hoàn tất không phát hiện lỗi.
 - **Artifact:** output/, logging/trace.jsonl,
   logging/metadata.json.
@@ -128,10 +129,8 @@ Các lệnh cần chạy cho batch cuối:
 - **Bằng chứng:** Verifier có thể từ chối refund bị sửa thành 999 BRL và kiểm
   tra lại affected ID/evidence từ dữ liệu nguồn.
 
-Model được cấu hình trong source là gpt-4o-mini. OpenAI không công bố parameter
-count chính thức của model này, nên chưa thể chứng minh cứng điều kiện không
-quá 10B. Đây là rủi ro cần được xác nhận với Lab Coach hoặc đổi sang model có
-parameter count công bố trước khi nộp.
+Model được cấu hình trong source là google/gemma-3-4b-it và được gọi qua
+OpenRouter. Gemma 3 4B có 4 tỷ tham số, đáp ứng giới hạn không quá 10B.
 
 ## 6. Một lỗi hoặc blocker đã xử lý
 
@@ -170,7 +169,7 @@ Một lượt chạy chỉ được xem là thành công khi:
 
 1. Có đúng 50 JSON từ EC_001 đến EC_050.
 2. Cả 50 output qua Pydantic và Verifier.
-3. Trace có đúng 300 event, mỗi case 6 event.
+3. Trace có đúng 350 event, mỗi case 7 event.
 4. metadata khớp model và runtime trong source.
 5. ZIP chỉ chứa 50 JSON của output.
 

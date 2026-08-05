@@ -4,16 +4,16 @@ from __future__ import annotations
 
 import json
 
-from openai import OpenAI
+from openrouter import OpenRouter
 from pydantic import BaseModel, Field
 
-from src.config import MODEL_NAME, get_openai_api_key
+from src.config import MODEL_NAME, get_openrouter_api_key
 from src.input_schema import CaseInput
 from src.output_schema import CaseOutput
 
 
 class LLMReview(BaseModel):
-    """Kết quả audit do model OpenAI trả về."""
+    """Kết quả audit do model qua OpenRouter trả về."""
 
     approved: bool
     summary: str
@@ -28,63 +28,59 @@ class LLMReviewAgent:
     name = "llm_review_agent"
 
     def __init__(self) -> None:
-        self.client = OpenAI(api_key=get_openai_api_key())
+        self.api_key = get_openrouter_api_key()
 
     def review(self, case: CaseInput, result: CaseOutput) -> LLMReview:
         print(
-            f"[LLM] {case.case_id}: calling OpenAI model {MODEL_NAME}...",
+            f"[LLM] {case.case_id}: "
+            f"calling OpenRouter model {MODEL_NAME}...",
             flush=True,
         )
-        response = self.client.responses.create(
-            model=MODEL_NAME,
-            instructions=(
-                "You are the final audit agent for an e-commerce dispute. "
-                "Check only whether the candidate output is internally "
-                "consistent with the supplied case request. Do not invent "
-                "IDs, events, amounts, or policies. Approve unless there is "
-                "a concrete contradiction. Return the required JSON."
-            ),
-            input=json.dumps(
-                {
-                    "case": case.model_dump(mode="json"),
-                    "candidate_output": result.model_dump(mode="json"),
-                },
-                ensure_ascii=False,
-            ),
-            text={
-                "format": {
-                    "type": "json_schema",
-                    "name": "case_review",
-                    "strict": True,
-                    "schema": {
-                        "type": "object",
-                        "properties": {
-                            "approved": {"type": "boolean"},
-                            "summary": {"type": "string"},
-                            "flagged_fields": {
-                                "type": "array",
-                                "items": {"type": "string"},
-                                "maxItems": 5,
-                            },
-                        },
-                        "required": [
-                            "approved",
-                            "summary",
-                            "flagged_fields",
-                        ],
-                        "additionalProperties": False,
+        with OpenRouter(api_key=self.api_key) as client:
+            response = client.chat.send(
+                model=MODEL_NAME,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": (
+                            "You are the final audit agent for an e-commerce "
+                            "dispute. Check whether the candidate output is "
+                            "internally consistent with the supplied case. "
+                            "Do not invent IDs, events, amounts, or policies. "
+                            "Approve unless there is a concrete contradiction. "
+                            "Return only JSON with approved (boolean), summary "
+                            "(string), and flagged_fields (array of at most "
+                            "5 strings)."
+                        ),
                     },
-                }
-            },
-            temperature=0,
-            max_output_tokens=200,
-            store=False,
-        )
-        payload = json.loads(response.output_text)
+                    {
+                        "role": "user",
+                        "content": json.dumps(
+                            {
+                                "case": case.model_dump(mode="json"),
+                                "candidate_output": result.model_dump(
+                                    mode="json"
+                                ),
+                            },
+                            ensure_ascii=False,
+                        ),
+                    },
+                ],
+                response_format={"type": "json_object"},
+                temperature=0,
+                max_tokens=200,
+            )
+
+        content = response.choices[0].message.content
+        if not isinstance(content, str) or not content.strip():
+            raise RuntimeError(
+                f"OpenRouter không trả về text cho {case.case_id}"
+            )
+        payload = json.loads(content)
         review = LLMReview(
             **payload,
-            response_id=response.id,
-            actual_model=response.model,
+            response_id=response.id or "missing-response-id",
+            actual_model=response.model or MODEL_NAME,
         )
         print(
             f"[LLM] {case.case_id}: called=true "

@@ -76,7 +76,7 @@ def main() -> None:
         and event["output_summary"].get("response_id")
     )
     if set(llm_counts.values()) != {1} or len(llm_counts) != 50:
-        raise ValueError("Mỗi case phải có một OpenAI model call hợp lệ")
+        raise ValueError("Mỗi case phải có một OpenRouter model call hợp lệ")
 
     verifier_counts = Counter(
         event["case_id"]
@@ -99,7 +99,7 @@ def main() -> None:
 
     print(
         "VALID: 50 outputs, 350 trace events, "
-        "50 OpenAI calls, metadata matched"
+        "50 OpenRouter calls, metadata matched"
     )
     for issue, count in sorted(issue_counts.items()):
         print(f"  {issue}: {count}")

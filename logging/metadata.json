@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-08-05T20:53:19.984+07:00",
+  "generated_at": "2026-08-05T23:44:10.318+07:00",
   "cohort": "K4",
   "repo_starter": "K4-Day9-Multi-Agent-A2A",
-  "model_provider": "openai",
-  "model_name": "gpt-4o-mini",
-  "parameter_size": "not publicly disclosed by OpenAI",
+  "model_provider": "openrouter",
+  "model_name": "google/gemma-3-4b-it",
+  "parameter_size": "4B",
   "framework": "custom Python multi-agent coordinator with Pydantic handoffs",
   "runtime": "Python 3.11.9",
   "pandas_version": "3.0.5",
   "policy_version": "EC_POLICY_V2",
-  "execution_mode": "deterministic domain agents with OpenAI LLM review per case",
+  "execution_mode": "deterministic domain agents with OpenRouter LLM review per case",
   "processed_cases": 50
 }

@@ -1,5 +1,5 @@
-openai
+openrouter==1.1.31
 pandas
-pydantic
+pydantic>=2.11,<2.13
 python-dotenv
 pytest
