@@ -17,6 +17,8 @@ def write_metadata(path: Path, processed_cases: int) -> None:
         "generated_at": datetime.now().astimezone().isoformat(
             timespec="milliseconds"
         ),
+        "cohort": "K4",
+        "repo_starter": "K4-Day9-Multi-Agent-A2A",
         "model_provider": MODEL_PROVIDER,
         "model_name": MODEL_NAME,
         "parameter_size": "not publicly disclosed by OpenAI",

@@ -44,13 +44,16 @@ Ba nguyên tắc thiết kế:
                 Draft CaseOutput           |
                        |                   |
                        v                   |
+                 LLMReviewAgent            |
+                       |                   |
+                       v                   |
                  VerifierAgent <-----------+
                        |
                        v
                 output/EC_*.json
 
-Mỗi case tạo 5 handoff từ các agent phân tích về Coordinator và 1 handoff từ
-Verifier, tổng cộng 6 event. Lượt chạy 50 case tạo 300 dòng trong
+Mỗi case tạo 5 handoff từ các agent phân tích, 1 handoff từ LLMReviewAgent và
+1 handoff từ Verifier, tổng cộng 7 event. Lượt chạy 50 case tạo 350 dòng trong
 logging/trace.jsonl.
 
 ## 3. Vai trò, input, output và quyền truy cập
@@ -63,6 +66,7 @@ logging/trace.jsonl.
 | PaymentAgent | OrderProductAnalysis | PaymentAnalysis | payments qua DataStore |
 | DeliveryAgent | OrderProductAnalysis | DeliveryAnalysis | Không đọc CSV trực tiếp |
 | PolicyAgent | Bốn analysis handoff | PolicyDecision | Không đọc CSV trực tiếp |
+| LLMReviewAgent | CaseInput và CaseOutput dự thảo | LLMReview | Gọi OpenAI Responses API bằng key trong `.env` |
 | VerifierAgent | CaseOutput dự thảo | CaseOutput đã xác minh | Đọc lại orders, items, payments qua DataStore |
 | TraceLogger | Handoff summary | JSONL event | Chỉ ghi logging/trace.jsonl |
 
@@ -194,8 +198,9 @@ Model được khai báo trong source tại src/config.py:
 OPENAI_API_KEY chỉ nằm trong .env. File .env bị .gitignore và không được đưa
 vào trace, output, metadata hoặc submission ZIP.
 
-Pipeline hiện thực hiện các quyết định chấm điểm bằng data agent xác định và
-không dùng phản hồi LLM để tạo ID, timestamp, số tiền hoặc policy result.
+Pipeline dùng data agent xác định để tạo ID, timestamp, số tiền và policy result.
+LLMReviewAgent gọi OpenAI một lần cho mỗi case để audit tính nhất quán của output
+dự thảo; phản hồi LLM không tự thay đổi dữ liệu đã được đối chiếu từ CSV.
 OpenAI không công bố parameter count của gpt-4o-mini, vì vậy metadata ghi
 "not publicly disclosed by OpenAI". Nếu ban tổ chức yêu cầu bằng chứng công
 khai rằng model không quá 10B, cần đổi sang model có parameter count công bố
@@ -206,5 +211,5 @@ trước khi nộp.
     .\.venv\Scripts\python.exe -m src.run
     .\.venv\Scripts\python.exe -m src.validate_outputs
 
-Kết quả hợp lệ gồm 50 output JSON, 300 trace event và metadata khớp cấu hình
-trong source.
+Kết quả hợp lệ gồm 50 output JSON, 350 trace event, 50 OpenAI model call và
+metadata khớp cấu hình trong source.
