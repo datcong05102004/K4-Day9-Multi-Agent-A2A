@@ -1,0 +1,12 @@
+{
+  "generated_at": "2026-08-05T16:42:21.885+07:00",
+  "model_provider": "openai",
+  "model_name": "gpt-4o-mini",
+  "parameter_size": "not publicly disclosed by OpenAI",
+  "framework": "custom Python multi-agent coordinator with Pydantic handoffs",
+  "runtime": "Python 3.11.9",
+  "pandas_version": "3.0.5",
+  "policy_version": "EC_POLICY_V2",
+  "execution_mode": "deterministic data agents; model configured in source",
+  "processed_cases": 50
+}
