@@ -21,6 +21,7 @@ from src.output_schema import (
     RankedCause,
     RootCauseAnalysis,
 )
+from src.trace_logger import TraceLogger
 
 
 class CoordinatorAgent:
@@ -28,7 +29,12 @@ class CoordinatorAgent:
 
     name = "coordinator_agent"
 
-    def __init__(self, store: DataStore) -> None:
+    def __init__(
+        self,
+        store: DataStore,
+        trace: TraceLogger | None = None,
+    ) -> None:
+        self.trace = trace
         self.customer_agent = CustomerAgent(store)
         self.order_product_agent = OrderProductAgent(store)
         self.payment_agent = PaymentAgent(store)
@@ -43,17 +49,82 @@ class CoordinatorAgent:
             order_id,
             scope.include_customer_history,
         )
+        self._log_handoff(
+            case.case_id,
+            self.customer_agent.name,
+            [f"order:{order_id}"],
+            {
+                "customer_unique_id": (
+                    customer_context.customer_unique_id
+                ),
+                "related_order_count": len(
+                    customer_context.related_order_ids
+                ),
+            },
+        )
         order_analysis = self.order_product_agent.investigate(
             order_id,
             scope.include_product_context,
         )
+        self._log_handoff(
+            case.case_id,
+            self.order_product_agent.name,
+            [f"order:{order_id}"],
+            {
+                "item_count": len(order_analysis.items),
+                "seller_count": len(order_analysis.seller_ids),
+                "product_count": len(order_analysis.product_ids),
+            },
+        )
         payment_analysis = self.payment_agent.reconcile(order_analysis)
+        self._log_handoff(
+            case.case_id,
+            self.payment_agent.name,
+            [f"order:{order_id}"],
+            {
+                "payment_row_count": (
+                    payment_analysis.payment_row_count
+                ),
+                "payment_total_brl": (
+                    payment_analysis.payment_total_brl
+                ),
+                "reconciled": payment_analysis.reconciled,
+            },
+        )
         delivery_analysis = self.delivery_agent.analyze(order_analysis)
+        self._log_handoff(
+            case.case_id,
+            self.delivery_agent.name,
+            [f"order:{order_id}"],
+            {
+                "delivery_variance_hours": (
+                    delivery_analysis.delivery_variance_hours
+                ),
+                "late_handoff_seller_ids": (
+                    delivery_analysis.late_handoff_seller_ids
+                ),
+            },
+        )
         policy_decision = self.policy_agent.apply(
             order_analysis,
             customer_context,
             payment_analysis,
             delivery_analysis,
+        )
+        self._log_handoff(
+            case.case_id,
+            self.policy_agent.name,
+            [
+                f"order:{order_id}",
+                f"policy:{policy_decision.cause_code}",
+            ],
+            {
+                "primary_issue": policy_decision.primary_issue,
+                "case_status": policy_decision.case_status,
+                "recommended_refund_brl": (
+                    policy_decision.recommended_refund_brl
+                ),
+            },
         )
 
         item_ids = order_analysis.item_ids[:5]
@@ -123,4 +194,21 @@ class CoordinatorAgent:
                 ),
             ),
             resolution_actions=policy_decision.resolution_actions,
+        )
+
+    def _log_handoff(
+        self,
+        case_id: str,
+        agent: str,
+        input_refs: list[str],
+        output_summary: dict,
+    ) -> None:
+        if self.trace is None:
+            return
+        self.trace.handoff(
+            case_id=case_id,
+            agent=agent,
+            recipient=self.name,
+            input_refs=input_refs,
+            output_summary=output_summary,
         )
