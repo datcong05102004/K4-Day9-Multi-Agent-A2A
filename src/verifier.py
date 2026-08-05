@@ -94,23 +94,21 @@ class VerifierAgent:
         payment_total = _rounded(payment_rows["payment_value"].sum())
         payment = result.payment_reconciliation
 
+        if payment.item_total_brl != item_total:
+            raise ValueError("item_total_brl không khớp CSV")
+        if payment.freight_total_brl != freight_total:
+            raise ValueError("freight_total_brl không khớp CSV")
         if payment.payment_total_brl != payment_total:
             raise ValueError("payment_total_brl không khớp CSV")
 
         if item_rows.empty:
             if (
-                payment.item_total_brl is not None
-                or payment.freight_total_brl is not None
-                or payment.expected_total_brl is not None
+                payment.expected_total_brl is not None
                 or payment.difference_brl is not None
                 or payment.reconciled is not None
             ):
                 raise ValueError("Null handling sai cho order không có item")
         else:
-            if payment.item_total_brl != item_total:
-                raise ValueError("item_total_brl không khớp CSV")
-            if payment.freight_total_brl != freight_total:
-                raise ValueError("freight_total_brl không khớp CSV")
             expected_total = _rounded(item_total + freight_total)
             difference = _rounded(payment_total - expected_total)
             reconciled = abs(difference) <= 0.10

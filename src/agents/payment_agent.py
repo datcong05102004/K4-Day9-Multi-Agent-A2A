@@ -30,8 +30,8 @@ class PaymentAnalysis(BaseModel):
     """Contract PaymentAgent bàn giao cho PolicyAgent và Coordinator."""
 
     currency: str
-    item_total_brl: float | None
-    freight_total_brl: float | None
+    item_total_brl: float
+    freight_total_brl: float
     expected_total_brl: float | None
     payment_total_brl: float
     difference_brl: float | None
@@ -56,21 +56,19 @@ class PaymentAgent:
         order_id = order_analysis.order.order_id
         payment_rows = self.store.get_order_payments(order_id)
 
+        item_total = _rounded(
+            sum(item.price for item in order_analysis.items)
+        )
+        freight_total = _rounded(
+            sum(item.freight_value for item in order_analysis.items)
+        )
         payment_total = _rounded(payment_rows["payment_value"].sum())
 
         if order_analysis.items:
-            item_total: float | None = _rounded(
-                sum(item.price for item in order_analysis.items)
-            )
-            freight_total: float | None = _rounded(
-                sum(item.freight_value for item in order_analysis.items)
-            )
             expected_total = _rounded(item_total + freight_total)
             difference = _rounded(payment_total - expected_total)
             reconciled: bool | None = abs(difference) <= 0.10
         else:
-            item_total = None
-            freight_total = None
             expected_total = None
             difference = None
             reconciled = None
