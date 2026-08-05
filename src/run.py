@@ -11,6 +11,7 @@ from src.config import INPUT_DIR, LOGGING_DIR, OUTPUT_DIR
 from src.coordinator import CoordinatorAgent
 from src.data_store import DataStore
 from src.input_schema import load_case
+from src.metadata import write_metadata
 from src.trace_logger import TraceLogger
 from src.verifier import VerifierAgent
 
@@ -72,6 +73,10 @@ def run_all(
             verified.case_assessment.primary_issue
         ] += 1
 
+    write_metadata(
+        LOGGING_DIR / "metadata.json",
+        processed_cases=len(case_files),
+    )
     return issue_counts
 
 
