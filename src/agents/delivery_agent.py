@@ -55,6 +55,22 @@ class DeliveryAgent:
         order_analysis: OrderProductAnalysis,
     ) -> DeliveryAnalysis:
         order = order_analysis.order
+
+        # Không có sự kiện carrier handoff thì không đủ bằng chứng để
+        # tạo phân tích đúng/muộn cho từng seller.
+        if order.carrier_handoff_at is None:
+            return DeliveryAnalysis(
+                delivered_at=order.delivered_at,
+                estimated_delivery_at=order.estimated_delivery_at,
+                carrier_handoff_at=None,
+                delivery_variance_hours=_hours_between(
+                    order.delivered_at,
+                    order.estimated_delivery_at,
+                ),
+                seller_handoff_analysis=[],
+                late_handoff_seller_ids=[],
+            )
+
         seller_results: list[SellerHandoffAnalysis] = []
         late_seller_ids: list[str] = []
 
