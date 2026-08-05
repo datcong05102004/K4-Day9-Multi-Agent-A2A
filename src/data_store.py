@@ -68,14 +68,10 @@ class DataStore:
         ].copy()
 
     def get_order_payments(self, order_id: str) -> pd.DataFrame:
-        """Trả về payment row theo khóa nghiệp vụ payment_sequential."""
-        rows = self.order_payments[
+        """Trả về các payment row theo đúng thứ tự dữ liệu nguồn."""
+        return self.order_payments[
             self.order_payments["order_id"].eq(order_id)
         ].copy()
-        return rows.sort_values(
-            "payment_sequential",
-            kind="stable",
-        )
 
     def get_customer(self, customer_id: str) -> pd.Series:
         """Trả về customer row tương ứng với một order."""
