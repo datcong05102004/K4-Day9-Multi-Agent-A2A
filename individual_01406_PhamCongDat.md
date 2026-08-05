@@ -29,8 +29,8 @@ orchestration, kiểm tra và tài liệu.
 | Policy decision | src/agents/policy_agent.py | Các analysis handoff | PolicyDecision | Hoàn thành |
 | Orchestration | src/coordinator.py | CaseInput | CaseOutput dự thảo | Hoàn thành |
 | Verification | src/verifier.py | CaseOutput và CSV | CaseOutput đã xác minh | Hoàn thành |
-| Batch và audit | src/run.py, src/trace_logger.py, src/metadata.py | 50 input | Output, trace, metadata | Source hoàn thành; chưa chạy batch cuối |
-| Batch validation | src/validate_outputs.py | Output, trace, metadata | Báo cáo validation | Source hoàn thành; chưa chạy batch cuối |
+| Batch và audit | src/run.py, src/trace_logger.py, src/metadata.py | 50 input | Output, trace, metadata | Hoàn thành |
+| Batch validation | src/validate_outputs.py | Output, trace, metadata | Báo cáo validation | Hoàn thành |
 
 ### Việc hỗ trợ ngoài phạm vi chính
 
@@ -48,9 +48,9 @@ tích hợp module, kiểm tra contract và viết tài liệu kiến trúc.
 | Tổng hợp output | CoordinatorAgent.process_case | CaseOutput đúng schema | Chạy EC_002 trong bộ nhớ |
 | Xác minh output | VerifierAgent.verify | Từ chối ID, evidence hoặc refund sai | Thử thay refund thành 999 BRL |
 
-Output batch cuối chưa được xác minh tại thời điểm viết báo cáo. Kiểm tra local
-gần nhất cho thấy output count bằng 0, trace line bằng 0 và metadata chưa được
-tạo. Vì vậy báo cáo không khẳng định đã sinh thành công 50 output.
+Batch cuối đã sinh đủ 50 output từ EC_001.json đến EC_050.json. Trace có 300
+event, tương ứng 6 handoff cho mỗi case. metadata.json ghi processed_cases bằng
+50 và model_name là gpt-4o-mini.
 
 ## 4. Giải thích phần kỹ thuật
 
@@ -110,9 +110,9 @@ Các lệnh cần chạy cho batch cuối:
     .\.venv\Scripts\python.exe -m src.validate_outputs
 
 - **Kết quả mong đợi:** 50 output JSON, 300 trace event và metadata khớp source.
-- **Kết quả thực tế tại thời điểm viết:** chưa chạy batch cuối; chưa có artifact
-  để khẳng định thành công.
-- **Artifact dự kiến:** output/, logging/trace.jsonl,
+- **Kết quả thực tế:** 50 output JSON, 300 trace event và metadata ghi 50 case.
+  Batch validator hoàn tất không phát hiện lỗi.
+- **Artifact:** output/, logging/trace.jsonl,
   logging/metadata.json.
 
 ## 5. Một quyết định kỹ thuật quan trọng
@@ -145,8 +145,9 @@ parameter count công bố trước khi nộp.
 - **Điều học được:** template cần được đối chiếu với README trước khi điền,
   không sao chép nguyên nội dung không liên quan.
 
-Blocker hiện tại là batch cuối chưa được chạy, nên output, trace và metadata
-chưa có bằng chứng xác minh.
+Blocker batch đã được xử lý bằng cách chạy lại src.run và
+src.validate_outputs. Kết quả được đối chiếu bằng số file output, số dòng trace
+và processed_cases trong metadata.
 
 ## 7. Hiểu biết về luồng end-to-end
 
