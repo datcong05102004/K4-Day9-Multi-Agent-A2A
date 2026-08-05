@@ -56,8 +56,8 @@ class ProductContext(StrictModel):
 
 class PaymentReconciliation(StrictModel):
     currency: Literal["BRL"]
-    item_total_brl: float
-    freight_total_brl: float
+    item_total_brl: float | None
+    freight_total_brl: float | None
     expected_total_brl: float | None
     payment_total_brl: float
     difference_brl: float | None
