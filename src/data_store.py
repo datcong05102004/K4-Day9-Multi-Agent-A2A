@@ -39,6 +39,18 @@ class DataStore:
                 "payment_value": float,
             },
         )
+        self.customers = pd.read_csv(
+            data_dir / "olist_customers_dataset.csv",
+            dtype=str,
+        )
+        self.products = pd.read_csv(
+            data_dir / "olist_products_dataset.csv",
+            dtype=str,
+        )
+        self.sellers = pd.read_csv(
+            data_dir / "olist_sellers_dataset.csv",
+            dtype=str,
+        )
 
     def get_order(self, order_id: str) -> pd.Series:
         """Trả về đúng một order hoặc báo lỗi nếu ID không tồn tại."""
@@ -59,4 +71,44 @@ class DataStore:
         """Trả về các payment row theo đúng thứ tự dữ liệu nguồn."""
         return self.order_payments[
             self.order_payments["order_id"].eq(order_id)
+        ].copy()
+
+    def get_customer(self, customer_id: str) -> pd.Series:
+        """Trả về customer row tương ứng với một order."""
+        rows = self.customers[self.customers["customer_id"].eq(customer_id)]
+        if rows.empty:
+            raise KeyError(f"Không tìm thấy customer: {customer_id}")
+        if len(rows) > 1:
+            raise ValueError(f"Customer ID bị trùng trong dữ liệu: {customer_id}")
+        return rows.iloc[0].copy()
+
+    def get_product(self, product_id: str) -> pd.Series:
+        """Trả về product row theo product_id."""
+        rows = self.products[self.products["product_id"].eq(product_id)]
+        if rows.empty:
+            raise KeyError(f"Không tìm thấy product: {product_id}")
+        if len(rows) > 1:
+            raise ValueError(f"Product ID bị trùng trong dữ liệu: {product_id}")
+        return rows.iloc[0].copy()
+
+    def get_seller(self, seller_id: str) -> pd.Series:
+        """Trả về seller row theo seller_id."""
+        rows = self.sellers[self.sellers["seller_id"].eq(seller_id)]
+        if rows.empty:
+            raise KeyError(f"Không tìm thấy seller: {seller_id}")
+        if len(rows) > 1:
+            raise ValueError(f"Seller ID bị trùng trong dữ liệu: {seller_id}")
+        return rows.iloc[0].copy()
+
+    def get_orders_by_customer_unique_id(
+        self,
+        customer_unique_id: str,
+    ) -> pd.DataFrame:
+        """Tìm các order của cùng khách hàng theo thứ tự bảng orders."""
+        customer_ids = self.customers.loc[
+            self.customers["customer_unique_id"].eq(customer_unique_id),
+            "customer_id",
+        ]
+        return self.orders[
+            self.orders["customer_id"].isin(customer_ids)
         ].copy()
