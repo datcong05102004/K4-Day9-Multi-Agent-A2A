@@ -7,6 +7,7 @@ from src.agents.order_product_agent import (
     OrderProductAgent,
     OrderProductAnalysis,
 )
+from src.agents.payment_agent import PaymentAgent, PaymentAnalysis
 
 __all__ = [
     "CustomerAgent",
@@ -15,4 +16,6 @@ __all__ = [
     "OrderItemInfo",
     "OrderProductAgent",
     "OrderProductAnalysis",
+    "PaymentAgent",
+    "PaymentAnalysis",
 ]
