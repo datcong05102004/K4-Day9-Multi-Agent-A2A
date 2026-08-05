@@ -9,6 +9,7 @@ from src.agents import (
     PaymentAgent,
     PolicyAgent,
 )
+from src.agents.llm_review_agent import LLMReviewAgent
 from src.data_store import DataStore
 from src.input_schema import CaseInput
 from src.output_schema import (
@@ -40,6 +41,7 @@ class CoordinatorAgent:
         self.payment_agent = PaymentAgent(store)
         self.delivery_agent = DeliveryAgent()
         self.policy_agent = PolicyAgent()
+        self.llm_review_agent = LLMReviewAgent()
 
     def process_case(self, case: CaseInput) -> CaseOutput:
         order_id = case.customer_request.claimed_order_id
@@ -147,7 +149,7 @@ class CoordinatorAgent:
             + [f"policy:{policy_decision.cause_code}"]
         )[:20]
 
-        return CaseOutput(
+        result = CaseOutput(
             case_id=case.case_id,
             case_assessment=CaseAssessment(
                 primary_issue=policy_decision.primary_issue,
@@ -195,6 +197,21 @@ class CoordinatorAgent:
             ),
             resolution_actions=policy_decision.resolution_actions,
         )
+
+        llm_review = self.llm_review_agent.review(case, result)
+        self._log_handoff(
+            case.case_id,
+            self.llm_review_agent.name,
+            result.evidence_ids,
+            {
+                "api_called": True,
+                "approved": llm_review.approved,
+                "flagged_fields": llm_review.flagged_fields,
+                "response_id": llm_review.response_id,
+                "actual_model": llm_review.actual_model,
+            },
+        )
+        return result
 
     def _log_handoff(
         self,

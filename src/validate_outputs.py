@@ -55,18 +55,28 @@ def main() -> None:
         ).splitlines()
         if line.strip()
     ]
-    if len(events) != 300:
+    if len(events) != 350:
         raise ValueError(
-            f"Trace phải có 300 event, hiện có {len(events)}"
+            f"Trace phải có 350 event, hiện có {len(events)}"
         )
     if [event["sequence"] for event in events] != list(
-        range(1, 301)
+        range(1, 351)
     ):
-        raise ValueError("Trace sequence không liên tục từ 1 đến 300")
+        raise ValueError("Trace sequence không liên tục từ 1 đến 350")
 
     event_counts = Counter(event["case_id"] for event in events)
-    if set(event_counts.values()) != {6} or len(event_counts) != 50:
-        raise ValueError("Mỗi case phải có đúng 6 trace event")
+    if set(event_counts.values()) != {7} or len(event_counts) != 50:
+        raise ValueError("Mỗi case phải có đúng 7 trace event")
+
+    llm_counts = Counter(
+        event["case_id"]
+        for event in events
+        if event["agent"] == "llm_review_agent"
+        and event["output_summary"].get("api_called") is True
+        and event["output_summary"].get("response_id")
+    )
+    if set(llm_counts.values()) != {1} or len(llm_counts) != 50:
+        raise ValueError("Mỗi case phải có một OpenAI model call hợp lệ")
 
     verifier_counts = Counter(
         event["case_id"]
@@ -87,7 +97,10 @@ def main() -> None:
     if metadata.get("processed_cases") != 50:
         raise ValueError("metadata processed_cases phải là 50")
 
-    print("VALID: 50 outputs, 300 trace events, metadata matched")
+    print(
+        "VALID: 50 outputs, 350 trace events, "
+        "50 OpenAI calls, metadata matched"
+    )
     for issue, count in sorted(issue_counts.items()):
         print(f"  {issue}: {count}")
 

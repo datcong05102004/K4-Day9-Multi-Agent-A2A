@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-05T17:24:39.743+07:00",
+  "generated_at": "2026-08-05T17:36:29.601+07:00",
   "model_provider": "openai",
   "model_name": "gpt-4o-mini",
   "parameter_size": "not publicly disclosed by OpenAI",
@@ -7,6 +7,6 @@
   "runtime": "Python 3.11.9",
   "pandas_version": "3.0.5",
   "policy_version": "EC_POLICY_V2",
-  "execution_mode": "deterministic data agents; model configured in source",
+  "execution_mode": "deterministic domain agents with OpenAI LLM review per case",
   "processed_cases": 50
 }

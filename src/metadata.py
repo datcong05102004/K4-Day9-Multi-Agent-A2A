@@ -28,7 +28,7 @@ def write_metadata(path: Path, processed_cases: int) -> None:
         "pandas_version": pd.__version__,
         "policy_version": "EC_POLICY_V2",
         "execution_mode": (
-            "deterministic data agents; model configured in source"
+            "deterministic domain agents with OpenAI LLM review per case"
         ),
         "processed_cases": processed_cases,
     }
